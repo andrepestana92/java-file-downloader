@@ -45,6 +45,9 @@ public class Downloader {
 			raw = null;
 			e.printStackTrace();
 		}
+		catch (ClassCastException e) {
+			raw = null;
+		}
 		if(raw != null && raw.indexOf("=") != -1) {
 		    fileName = raw.split("=")[1];
 		    fileName = raw.replaceFirst("(?i)^.*filename=\"?([^\"]+)\"?.*$", "$1");
