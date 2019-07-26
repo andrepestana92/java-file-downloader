@@ -1,5 +1,6 @@
 package main.java.org.dowloader;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -15,10 +16,11 @@ public class Downloader {
 		URL url;
 		FileOutputStream fileOutputStream = null;
 		ReadableByteChannel readableByteChannel  = null;
+		String fileName = null;
 		try {
 			url = new URL(urlString);
 			readableByteChannel = Channels.newChannel(url.openStream());
-			String fileName = this.get_name(url);
+			fileName = this.getFileName(url);
 			fileOutputStream = new FileOutputStream(fileName);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
@@ -30,12 +32,14 @@ public class Downloader {
 		FileChannel fileChannel = fileOutputStream.getChannel();
 		try {
 			fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+			fileOutputStream.close();
+			throw new IOException();
 		} catch (IOException e) {
-			e.printStackTrace();
+			this.deleteFailedDonwloadedFile(fileName);
 		}
 	}
 	
-	private String get_name(URL url) {
+	private String getFileName(URL url) {
 		String fileName = "";
 		String raw = null;
 		try {
@@ -43,7 +47,6 @@ public class Downloader {
 			raw = conn.getHeaderField("Content-Disposition");
 		} catch (IOException e) {
 			raw = null;
-			e.printStackTrace();
 		}
 		catch (ClassCastException e) {
 			raw = null;
@@ -55,5 +58,11 @@ public class Downloader {
 		    fileName = Paths.get(url.getPath()).getFileName().toString();
 		}
 		return fileName;
+	}
+	
+	private void deleteFailedDonwloadedFile(String fileName) {
+		File file = new File(fileName);
+		file.delete();
+		
 	}
 }
