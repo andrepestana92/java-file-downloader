@@ -33,7 +33,6 @@ public class Downloader {
 		try {
 			fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
 			fileOutputStream.close();
-			throw new IOException();
 		} catch (IOException e) {
 			this.deleteFailedDonwloadedFile(fileName);
 		}
