@@ -9,9 +9,15 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Downloader {
+	public Downloader() {
+		this.checkFolderCreation();
+	}
+	
 	void downloadFile(String urlString) {
 		URL url;
 		FileOutputStream fileOutputStream = null;
@@ -21,7 +27,8 @@ public class Downloader {
 			url = new URL(urlString);
 			readableByteChannel = Channels.newChannel(url.openStream());
 			fileName = this.getFileName(url);
-			fileOutputStream = new FileOutputStream(fileName);
+			fileOutputStream = new FileOutputStream(
+					Constants.DOWNLOAD_FOLDER + "/" + fileName);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -61,7 +68,18 @@ public class Downloader {
 	
 	private void deleteFailedDonwloadedFile(String fileName) {
 		File file = new File(fileName);
-		file.delete();
-		
+		file.delete();	
+	}
+	
+	private void checkFolderCreation() {
+		Path downloadFolder = Paths.get(Constants.DOWNLOAD_FOLDER);
+		if (!Files.exists(downloadFolder)) {
+            try {
+				Files.createDirectory(downloadFolder);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+		}
 	}
 }
