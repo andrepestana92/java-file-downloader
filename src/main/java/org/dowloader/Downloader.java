@@ -31,7 +31,7 @@ public class Downloader {
 		ReadableByteChannel urlFile  = null;
 		String fileName = null;
 		try {
-			urlFile = this.channelHandler.getUrlChannel(urlObj);
+			urlFile = this.channelHandler.setUpUrlChannel(urlObj);
 			fileName = Constants.DOWNLOAD_FOLDER + "/" + this.getFileName(urlObj);
 			this.logger.info("Creating file with name " + fileName);
 			downloadedFile = this.channelHandler.getFileOutputStream(fileName);
@@ -49,12 +49,18 @@ public class Downloader {
 		}
 		
 		FileChannel fileChannel = this.channelHandler.getChannel(downloadedFile);
+		Long received = 0L;
 		try {
-			fileChannel.transferFrom(urlFile, 0, Long.MAX_VALUE);
+			received = this.channelHandler.downloadFromChannel(fileChannel, urlFile);
 			downloadedFile.close();
 			this.logger.info("Finished downloading file " + fileName);
 		} catch (IOException e) {
 			this.logger.warn("Couldn't complete the download. Removing it from disk");
+			this.deleteFailedDonwloadedFile(fileName);
+		}
+		
+		if (received != this.channelHandler.getUrlContentLength()) {
+			this.logger.warn("Download was incomplete. Removing partial file from disk");
 			this.deleteFailedDonwloadedFile(fileName);
 		}
 		
