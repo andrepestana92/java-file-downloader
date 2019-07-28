@@ -9,10 +9,10 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 
-class ChannelHandler {
+public class ChannelHandler {
 	private URLConnection con;
 	
-	ReadableByteChannel setUpUrlChannel(URL url) throws IOException {
+	public ReadableByteChannel setUpUrlChannel(URL url) throws IOException {
 		this.con = url.openConnection();
 		this.con.setConnectTimeout(10000);
 		this.con.setReadTimeout(10000);
@@ -27,7 +27,7 @@ class ChannelHandler {
 		return downloadedFile.getChannel();
 	}
 	
-	Long downloadFromChannel(FileChannel fileChannel, ReadableByteChannel urlFile) throws IOException {
+	public Long downloadFromChannel(FileChannel fileChannel, ReadableByteChannel urlFile) throws IOException {
 		return fileChannel.transferFrom(urlFile, 0, Long.MAX_VALUE);
 	}
 	

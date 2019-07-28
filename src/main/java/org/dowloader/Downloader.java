@@ -26,7 +26,7 @@ public class Downloader {
 		this.channelHandler = cnHandler;
 	}
 	
-	void downloadFile(URL urlObj) {
+	public Boolean downloadFile(URL urlObj) {
 		FileOutputStream downloadedFile = null;
 		ReadableByteChannel urlFile  = null;
 		String fileName = null;
@@ -37,15 +37,15 @@ public class Downloader {
 			downloadedFile = this.channelHandler.getFileOutputStream(fileName);
 		} catch (MalformedURLException e) {
 			this.logger.error("Url in a wrong format");
-			return;
+			return false;
 			
 		} catch (ConnectException e) {
 			this.logger.error("Could not connect to the host");
-			return;
+			return false;
 			
 		} catch (IOException e) {
 			this.logger.error("An internal error happened while reading file from url");
-			return;
+			return false;
 		}
 		
 		FileChannel fileChannel = this.channelHandler.getChannel(downloadedFile);
@@ -57,13 +57,16 @@ public class Downloader {
 		} catch (IOException e) {
 			this.logger.warn("Couldn't complete the download. Removing it from disk");
 			this.deleteFailedDonwloadedFile(fileName);
+			return false;
 		}
 		
-		if (received != this.channelHandler.getUrlContentLength()) {
+		int originalSize = this.channelHandler.getUrlContentLength();
+		if (originalSize > 0 && received != originalSize) {
 			this.logger.warn("Download was incomplete. Removing partial file from disk");
 			this.deleteFailedDonwloadedFile(fileName);
+			return false;
 		}
-		
+		return true;
 	}
 	
 	private String getFileName(URL urlObj) {
