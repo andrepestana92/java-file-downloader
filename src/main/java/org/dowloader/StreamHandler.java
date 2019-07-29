@@ -3,7 +3,6 @@ package main.java.org.dowloader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
@@ -28,6 +27,9 @@ public class StreamHandler {
 	}
 	
 	public Long downloadFromChannel(FileChannel fileChannel, ReadableByteChannel urlFile) throws IOException {
+		/* The transferFrom method creates a connection between two channels and saves the content
+		 * of the source directly in the file, without the need of buffering any significant 
+		  amount of space in memory. */
 		return fileChannel.transferFrom(urlFile, 0, Long.MAX_VALUE);
 	}
 	
