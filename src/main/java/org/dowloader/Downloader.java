@@ -18,23 +18,28 @@ import org.apache.log4j.Logger;
 
 public class Downloader {
 	private Logger logger;
-	private ChannelHandler channelHandler;
+	private StreamHandler streamHandler;
+	private String folderPath = Constants.DOWNLOAD_FOLDER;
 	
-	public Downloader(ChannelHandler cnHandler) {
-		this.checkFolderCreation();
+	public Downloader(StreamHandler cnHandler) {
 		this.logger = LogManager.getLogger(Downloader.class);
-		this.channelHandler = cnHandler;
+		this.streamHandler = cnHandler;
+	}
+	
+	public void setFolderPath(String folderPath) {
+		this.folderPath = folderPath;
 	}
 	
 	public Boolean downloadFile(URL urlObj) {
 		FileOutputStream downloadedFile = null;
 		ReadableByteChannel urlFile  = null;
 		String fileName = null;
+		this.checkFolderCreation();
 		try {
-			urlFile = this.channelHandler.setUpUrlChannel(urlObj);
-			fileName = Constants.DOWNLOAD_FOLDER + "/" + this.getFileName(urlObj);
+			urlFile = this.streamHandler.setUpUrlChannel(urlObj);
+			fileName = this.folderPath + "/" + this.getFileName(urlObj);
 			this.logger.info("Creating file with name " + fileName);
-			downloadedFile = this.channelHandler.getFileOutputStream(fileName);
+			downloadedFile = this.streamHandler.getFileOutputStream(fileName);
 		} catch (MalformedURLException e) {
 			this.logger.error("Url in a wrong format");
 			return false;
@@ -48,11 +53,11 @@ public class Downloader {
 			return false;
 		}
 		
-		FileChannel fileChannel = this.channelHandler.getChannel(downloadedFile);
+		FileChannel fileChannel = this.streamHandler.getChannel(downloadedFile);
 		Long received = 0L;
 		try {
-			received = this.channelHandler.downloadFromChannel(fileChannel, urlFile);
-			downloadedFile.close();
+			received = this.streamHandler.downloadFromChannel(fileChannel, urlFile);
+			this.streamHandler.closeFileStream(downloadedFile);
 			this.logger.info("Finished downloading file " + fileName);
 		} catch (IOException e) {
 			this.logger.warn("Couldn't complete the download. Removing it from disk");
@@ -60,7 +65,7 @@ public class Downloader {
 			return false;
 		}
 		
-		int originalSize = this.channelHandler.getUrlContentLength();
+		int originalSize = this.streamHandler.getUrlContentLength(urlObj);
 		if (originalSize > 0 && received != originalSize) {
 			this.logger.warn("Download was incomplete. Removing partial file from disk");
 			this.deleteFailedDonwloadedFile(fileName);
@@ -72,6 +77,8 @@ public class Downloader {
 	private String getFileName(URL urlObj) {
 		String fileName = "";
 		String raw = null;
+		/* Some http(s) urls have the file name on its header via the Content-Disposition field.
+		 * This is used when the filename is not  present in the url, like Google Drive files.*/
 		try {
 			this.logger.info("Trying to get the url object name from Http(s) header");
 			HttpURLConnection conn = (HttpURLConnection) urlObj.openConnection();
@@ -79,8 +86,8 @@ public class Downloader {
 			conn.disconnect();
 		} catch (IOException e) {
 			raw = null;
-		}
-		catch (ClassCastException e) {
+		/* If the url belongs to a ftp server, then the code will return this Exception */
+		} catch (ClassCastException e) {
 			this.logger.info("Couldn't get the name from Header. Will get it from url path instead");
 			raw = null;
 		}
@@ -101,7 +108,7 @@ public class Downloader {
 	}
 	
 	private void checkFolderCreation() {
-		Path downloadFolder = Paths.get(Constants.DOWNLOAD_FOLDER);
+		Path downloadFolder = Paths.get(this.folderPath);
 		if (!Files.exists(downloadFolder)) {
             try {
             	this.logger.info("Download folder still doesn't exist. Creating a new one");

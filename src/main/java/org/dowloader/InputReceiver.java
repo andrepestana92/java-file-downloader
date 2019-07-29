@@ -6,7 +6,7 @@ public class InputReceiver {
 	
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
-		InputParser parser = new InputParser(new Downloader(new ChannelHandler()), args);
-		parser.computeArgsFile();
+		InputParser parser = new InputParser(new Downloader(new StreamHandler()), args);
+		parser.computeDownloadList();
 	}
 }

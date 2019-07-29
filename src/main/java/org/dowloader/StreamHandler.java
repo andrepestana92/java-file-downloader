@@ -3,19 +3,19 @@ package main.java.org.dowloader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 
-public class ChannelHandler {
-	private URLConnection con;
+public class StreamHandler {
 	
 	public ReadableByteChannel setUpUrlChannel(URL url) throws IOException {
-		this.con = url.openConnection();
-		this.con.setConnectTimeout(10000);
-		this.con.setReadTimeout(10000);
+		URLConnection con = url.openConnection();
+		con.setConnectTimeout(Constants.TIMEOUT_LIMIT);
+		con.setReadTimeout(Constants.TIMEOUT_LIMIT);
 		return Channels.newChannel(con.getInputStream());
 	}
 	
@@ -31,7 +31,20 @@ public class ChannelHandler {
 		return fileChannel.transferFrom(urlFile, 0, Long.MAX_VALUE);
 	}
 	
-	int getUrlContentLength() {
-		return this.con.getContentLength();
+	public int getUrlContentLength(URL url) {
+		try {
+			return url.openConnection().getContentLength();
+		} catch (IOException e) {
+			return 0;
+		}
+	}
+	
+	public Boolean closeFileStream(FileOutputStream downloadedFile){
+		try {
+			downloadedFile.close();
+		} catch (IOException e) {
+			return false;
+		}
+		return true;
 	}
 }
